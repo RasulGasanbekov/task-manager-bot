@@ -31,6 +31,27 @@ async def help_command(message: Message):
     "- /help — выводит список всех доступных команд и их описание."
 )
 
+@router.message(F.text == "/list")
+async def list_tasks(message: Message):
+    tasks = crud.get_tasks_by_user(user_id=message.from_user.id)
+    
+    if not tasks:
+        await message.answer("📭 У вас пока нет задач.", parse_mode="HTML")
+        return
+
+    response = "📌 Ваши задачи:\n\n"
+    for idx, task in enumerate(tasks, 1):
+        deadline_str = task.deadline.strftime("%d.%m %H:%M")
+        response += (
+            f"{idx}. <b>{task.title}</b>\n"
+            f" <b>Дедлайн:</b> {deadline_str}\n"
+            f" <b>Категория:</b> {task.category}\n"
+            f" <b>Приоритет:</b> {task.priority}\n"
+            "———————–———————–———————–———————–\n"
+        )
+        
+    await message.answer(response, parse_mode="HTML")
+
 @router.message(F.text == "/add")
 async def add_task_start(message: Message, state: FSMContext):
     await state.set_state(AddTask.title)
