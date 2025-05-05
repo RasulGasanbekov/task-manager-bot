@@ -33,3 +33,10 @@ def get_task_by_id(user_id: int, task_id: int):
     with SessionLocal() as db:
         task = db.query(Task).filter(Task.user_id == user_id, Task.id == task_id).first()
         return task
+    
+def delete_task(task_id: int):
+    with SessionLocal() as db:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if task:
+            db.delete(task)
+            db.commit()
