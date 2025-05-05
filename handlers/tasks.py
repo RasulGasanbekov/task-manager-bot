@@ -42,15 +42,39 @@ async def list_tasks(message: Message):
     response = "📌 Ваши задачи:\n\n"
     for idx, task in enumerate(tasks, 1):
         deadline_str = task.deadline.strftime("%d.%m %H:%M")
+        status_text = '🟠 В процессе' if task.status == 'pending' else '🟢 Завершена'
         response += (
             f"{idx}. <b>{task.title}</b>\n"
             f" <b>Дедлайн:</b> {deadline_str}\n"
             f" <b>Категория:</b> {task.category}\n"
             f" <b>Приоритет:</b> {task.priority}\n"
+            f" <b>Статус: </b> {status_text}\n"
             "———————–———————–———————–———————–\n"
         )
         
     await message.answer(response, parse_mode="HTML")
+
+@router.message(F.text.startswith("/done "))
+async def mark_task_done(message: Message):
+    task_id = message.text.split(" ")[1]
+    
+    try:
+        task_id = int(task_id)
+    except ValueError:
+        await message.answer("❌ Неверный формат ID. Пожалуйста, введите целое число.")
+        return
+    
+    # Проверяем, существует ли задача с таким ID для текущего пользователя
+    task = crud.get_task_by_id(user_id=message.from_user.id, task_id=task_id)
+    
+    if not task:
+        await message.answer(f"❌ Задача с ID {task_id} не найдена.")
+        return
+    
+    # Обновляем статус задачи на "completed"
+    crud.update_task_status(task_id=task_id, new_status="completed")
+    
+    await message.answer(f"🎉 Задача \"{task.title}\" успешно помечена как выполненная!")
 
 @router.message(F.text == "/add")
 async def add_task_start(message: Message, state: FSMContext):

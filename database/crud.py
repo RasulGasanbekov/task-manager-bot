@@ -22,3 +22,14 @@ def get_tasks_by_user(user_id):
     session.close()
     return tasks
 
+def update_task_status(task_id: int, new_status: str):
+    with SessionLocal() as db:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if task:
+            task.status = new_status
+            db.commit()
+
+def get_task_by_id(user_id: int, task_id: int):
+    with SessionLocal() as db:
+        task = db.query(Task).filter(Task.user_id == user_id, Task.id == task_id).first()
+        return task
