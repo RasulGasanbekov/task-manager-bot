@@ -1,6 +1,19 @@
 from handlers.base_imports import *
 from datetime import datetime, timedelta
 
+def get_week_day(task):
+    weekday_number = task.deadline.weekday()
+    week_days = {
+        0: "Понедельник",
+        1: "Вторник",
+        2: "Среда",
+        3: "Четверг",
+        4: "Пятница",
+        5: "Суббота",
+        6: "Воскресенье"
+    }
+    return week_days[weekday_number]
+
 router = Router()
 @router.message(F.text == "/start")
 async def start_command(message: Message):
@@ -32,12 +45,13 @@ async def list_tasks(message: Message):
 
     response = "📌 Ваши задачи:\n\n"
     for idx, task in enumerate(tasks, 1):
-        deadline_str = task.deadline.strftime("%d.%m %H:%M")
+        deadline_str = task.deadline.strftime("%d.%m.%Y %H:%M")
+        weekday = get_week_day(task)
         status_text = '🟠 В процессе' if task.status == 'pending' else '🟢 Завершена'
         response += (
             f"{idx}. <b>{task.title}</b>\n"
             f" <b>ID:</b> {task.id}\n"
-            f" <b>Дедлайн:</b> {deadline_str}\n"
+            f" <b>Дедлайн:</b> {deadline_str}  ({weekday})\n"
             f" <b>Категория:</b> {task.category}\n"
             f" <b>Приоритет:</b> {task.priority}\n"
             f" <b>Статус:</b> {status_text}\n"
