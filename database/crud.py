@@ -1,7 +1,7 @@
 from .models import Task
 from . import SessionLocal
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def create_task(user_id, title, deadline, category, priority):
     session = SessionLocal()
@@ -28,7 +28,19 @@ def update_task(task_id: int, **kwargs):
             db.refresh(task)
         return task
     
-
+def update_task_reminder(task_id: int, reminder_days: int):
+    """
+    Обновляет поле reminder_days для задачи с указанным ID
+    """
+    with SessionLocal() as db:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if task:
+            task.reminder_days = reminder_days
+            db.commit()
+            db.refresh(task)
+        return task
+    
+    
 def get_tasks_by_deadline_range( user_id: int, start: datetime, end: datetime):
     with SessionLocal() as db:
         return db.query(Task).filter(
@@ -60,3 +72,20 @@ def delete_task(task_id: int):
         if task:
             db.delete(task)
             db.commit()
+
+def get_tasks_with_due_reminder(today: datetime.date):
+    """
+    Возвращает задачи, у которых сегодня = deadline - reminder_days
+    """
+    session = SessionLocal()
+    tasks = session.query(Task).all()
+    result = []
+
+    for task in tasks:
+        if task.reminder_days <= 0:
+            continue
+        reminder_date = task.deadline - timedelta(days=task.reminder_days)
+        if reminder_date.date() == today:
+            result.append(task)
+
+    return result

@@ -13,3 +13,4 @@ class Task(Base):
     category = Column(String, nullable=False)
     priority = Column(String, nullable=False)
     status = Column(String, default="pending")
+    reminder_days = Column(Integer, default=0)
