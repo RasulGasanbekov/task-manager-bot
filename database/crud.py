@@ -1,5 +1,7 @@
 from .models import Task
 from . import SessionLocal
+from sqlalchemy.orm import Session
+from datetime import datetime
 
 def create_task(user_id, title, deadline, category, priority):
     session = SessionLocal()
@@ -25,6 +27,14 @@ def update_task(task_id: int, **kwargs):
             db.commit()
             db.refresh(task)
         return task
+    
+
+def get_tasks_by_deadline_range( user_id: int, start: datetime, end: datetime):
+    with SessionLocal() as db:
+        return db.query(Task).filter(
+            Task.user_id == user_id,
+            Task.deadline.between(start, end)
+        ).order_by(Task.deadline).all()
 
 def get_tasks_by_user(user_id):
     session = SessionLocal()

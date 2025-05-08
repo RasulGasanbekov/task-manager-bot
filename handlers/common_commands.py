@@ -1,9 +1,15 @@
 from handlers.base_imports import *
+from datetime import datetime, timedelta
 
 router = Router()
 @router.message(F.text == "/start")
 async def start_command(message: Message):
-    await message.answer(f"Привет, {message.from_user.first_name}! Я помогу тебе управлять задачами 🎯")
+    await message.answer(
+        f"Привет, {message.from_user.first_name}! 👋\n"
+        "Я помогу тебе управлять задачами. 🎯\n\n"
+        "Нажми /help, чтобы посмотреть список доступных команд.",
+        parse_mode="HTML"
+    )
 
 @router.message(F.text == "/help")
 async def help_command(message: Message):
@@ -35,7 +41,36 @@ async def list_tasks(message: Message):
             f" <b>Категория:</b> {task.category}\n"
             f" <b>Приоритет:</b> {task.priority}\n"
             f" <b>Статус:</b> {status_text}\n"
-            "———————–———————–———————–———————–\n"
+            "\n"
         )
         
+    await message.answer(response, parse_mode="HTML")
+
+@router.message(F.text == "/week_tasks")
+async def show_calendar_week(message: Message):
+    user_id = message.from_user.id
+
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_week = today - timedelta(days=today.weekday())  
+    end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59)  
+
+    tasks = crud.get_tasks_by_deadline_range(user_id=user_id, start=start_of_week, end=end_of_week)
+
+    if not tasks:
+        await message.answer("🎉 У вас нет задач на эту неделю.")
+        return
+
+    response = "📅 Вот задачи на эту неделю:\n\n"
+    for idx, task in enumerate(tasks, 1):
+        deadline_str = task.deadline.strftime("%d.%m %H:%M")
+        status_text = '🟠 В процессе' if task.status == 'pending' else '🟢 Завершена'
+        response += (
+            f"{idx}. <b>{task.title}</b>\n"
+            f" <b>Дедлайн:</b> {deadline_str}\n"
+            f" <b>Категория:</b> {task.category}\n"
+            f" <b>Приоритет:</b> {task.priority}\n"
+            f" <b>Статус:</b> {status_text}\n"
+            "\n"
+        )
+
     await message.answer(response, parse_mode="HTML")
