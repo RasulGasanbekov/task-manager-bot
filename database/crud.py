@@ -16,6 +16,16 @@ def create_task(user_id, title, deadline, category, priority):
     session.close()
     return task
 
+def update_task(task_id: int, **kwargs):
+    with SessionLocal() as db:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if task:
+            for key, value in kwargs.items():
+                setattr(task, key, value)
+            db.commit()
+            db.refresh(task)
+        return task
+
 def get_tasks_by_user(user_id):
     session = SessionLocal()
     tasks = session.query(Task).filter(Task.user_id == user_id).all()
