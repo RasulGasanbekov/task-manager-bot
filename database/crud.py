@@ -40,7 +40,7 @@ def update_task_reminder(task_id: int, reminder_days: int):
             db.refresh(task)
         return task
     
-    
+
 def get_tasks_by_deadline_range( user_id: int, start: datetime, end: datetime):
     with SessionLocal() as db:
         return db.query(Task).filter(
@@ -89,3 +89,17 @@ def get_tasks_with_due_reminder(today: datetime.date):
             result.append(task)
 
     return result
+
+def get_tasks_by_filters(db: Session, user_id: int, category=None, priority=None, start=None, end=None):
+    query = db.query(Task).filter(Task.user_id == user_id)
+
+    if category and category != "все":
+        query = query.filter(Task.category == category)
+
+    if priority and priority != "any":
+        query = query.filter(Task.priority == priority)
+
+    if start and end:
+        query = query.filter(Task.deadline.between(start, end))
+
+    return query.all()
