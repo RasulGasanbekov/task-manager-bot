@@ -63,3 +63,15 @@ def get_period_keyboard():
         [InlineKeyboardButton(text="📅 Выбрать в календаре", callback_data="period_custom")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=kb)
+
+def get_tasks_keyboard(tasks: list, action: str):
+    """Генерация клавиатуры с задачами"""
+    buttons = []
+    for task in tasks:
+        deadline_str = task.deadline.strftime("%d.%m %H:%M")
+        text = f"{task.id}. {task.title[:15]}... ({deadline_str})"
+        callback_data = f"task_action:{action}:{task.id}"  # Новый формат
+        buttons.append([InlineKeyboardButton(text=text, callback_data=callback_data)])
+    
+    buttons.append([InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_action")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

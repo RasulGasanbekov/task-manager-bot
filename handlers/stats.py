@@ -81,15 +81,13 @@ async def show_stats(callback: CallbackQuery, state: FSMContext):
         await callback.message.edit_text("📅 Выберите период в календаре", reply_markup=await calendar.start_calendar())
         return
 
-    with SessionLocal() as db:
-        tasks = crud.get_tasks_by_filters(
-            db=db,
-            user_id=user_id,
-            category=category,
-            priority=priority,
-            start=start_date,
-            end=end_date
-        )
+    tasks = crud.get_tasks_by_filters(
+        user_id=user_id,
+        category=category,
+        priority=priority,
+        start=start_date,
+        end=end_date
+    )
 
     total = len(tasks)
     completed = sum(1 for t in tasks if t.status == "completed")
@@ -118,16 +116,13 @@ async def process_calendar(
         data = await state.get_data()
         category = data.get("category")
         priority = data.get("priority")
-
-        with SessionLocal() as db:
-            tasks = crud.get_tasks_by_filters(
-                db=db,
-                user_id=callback.from_user.id,
-                category=category,
-                priority=priority,
-                start=date,
-                end=date + timedelta(days=1)
-            )
+        tasks = crud.get_tasks_by_filters(
+            user_id=callback.from_user.id,
+            category=category,
+            priority=priority,
+            start=date,
+            end=date + timedelta(days=1)
+        )
 
         total = len(tasks)
         completed = sum(1 for t in tasks if t.status == "completed")

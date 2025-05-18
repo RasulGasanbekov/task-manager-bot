@@ -31,7 +31,7 @@ async def add_task_category(message: Message, state: FSMContext):
 
 @router.message(AddTask.category)
 async def add_task_priority(message: Message, state: FSMContext):
-    await state.update_data(category=message.text)
+    await state.update_data(category=message.text.lower())
     await state.set_state(AddTask.priority)
     await message.answer(
         "Выберите приоритет:",
@@ -46,7 +46,7 @@ async def save_task(message: Message, state: FSMContext):
         title=user_data['title'],
         deadline=user_data['deadline'],
         category=user_data['category'],
-        priority=message.text
+        priority=message.text.lower()
     )
     await state.clear()
     await message.answer(

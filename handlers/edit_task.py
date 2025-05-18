@@ -1,45 +1,36 @@
 from .base_imports import *
-
-router = Router()
+from database import crud, SessionLocal
 
 class EditTask(StatesGroup):
-    task_id = State()
     title = State()
     deadline = State()
     category = State()
     priority = State()
 
-@router.message(F.text.startswith("/edit"))
-async def edit_task_start(message: Message, state: FSMContext):
-    text = message.text.strip()
-    parts = text.split()
+router = Router()
 
-    if len(parts) < 2:
-        await message.answer("❌ Укажите ID задачи. Пример: <code>/edit 1</code>", parse_mode="HTML")
-        return
-
-    try:
-        task_id = int(parts[1])
-    except ValueError:
-        await message.answer("❌ ID должен быть числом.")
-        return
-
-    task = crud.get_task_by_id(user_id=message.from_user.id, task_id=task_id)
-
+async def start_editing_flow(message: Message, task_id: int, state: FSMContext):
+    """Запускает процесс редактирования"""
+    
+    task = crud.get_task_by_id(task_id)
     if not task:
-        await message.answer(f"❌ Задача с ID {task_id} не найдена.")
-        return
-
-    await state.update_data(task_id=task_id)
+        await message.answer("❌ Задача не найдена")
+        return False
+        
     await state.set_state(EditTask.title)
-
-    await message.answer(f"📝 Введите новое название задачи (было: <b>{task.title}</b>):", parse_mode="HTML")
+    await state.update_data(task_id=task_id, current_title=task.title)
+    await message.answer(
+        f"✏️ Редактирование задачи: <b>{task.title}</b>\n\n"
+        "Введите новое название: ",
+        parse_mode="HTML"
+    )
+    return True
 
 @router.message(EditTask.title)
-async def edit_task_deadline(message: Message, state: FSMContext):
+async def process_new_title(message: Message, state: FSMContext): 
     await state.update_data(title=message.text)
     await state.set_state(EditTask.deadline)
-    await message.answer("📅 Укажите новый дедлайн (формат ДД.ММ.ГГГГ ЧЧ:ММ):")
+    await message.answer("📅 Введите новый дедлайн (ДД.ММ.ГГГГ ЧЧ:ММ)")
 
 
 @router.message(EditTask.deadline)

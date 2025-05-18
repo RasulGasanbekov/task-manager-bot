@@ -4,19 +4,18 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
 def create_task(user_id, title, deadline, category, priority):
-    session = SessionLocal()
-    task = Task(
-        user_id=user_id,
-        title=title,
-        deadline=deadline,
-        category=category,
-        priority=priority
-    )
-    session.add(task)
-    session.commit()
-    session.refresh(task)
-    session.close()
-    return task
+    with SessionLocal() as db: 
+        task = Task(
+            user_id=user_id,
+            title=title,
+            deadline=deadline,
+            category=category,
+            priority=priority
+        )
+        db.add(task)
+        db.commit()
+        db.refresh(task)
+        return task
 
 def update_task(task_id: int, **kwargs):
     with SessionLocal() as db:
@@ -41,7 +40,7 @@ def update_task_reminder(task_id: int, reminder_days: int):
         return task
     
 
-def get_tasks_by_deadline_range( user_id: int, start: datetime, end: datetime):
+def get_tasks_by_deadline_range(user_id: int, start: datetime, end: datetime):
     with SessionLocal() as db:
         return db.query(Task).filter(
             Task.user_id == user_id,
@@ -49,10 +48,9 @@ def get_tasks_by_deadline_range( user_id: int, start: datetime, end: datetime):
         ).order_by(Task.deadline).all()
 
 def get_tasks_by_user(user_id):
-    session = SessionLocal()
-    tasks = session.query(Task).filter(Task.user_id == user_id).all()
-    session.close()
-    return tasks
+    with SessionLocal() as db:
+        tasks = db.query(Task).filter(Task.user_id == user_id).all()
+        return tasks
 
 def update_task_status(task_id: int, new_status: str):
     with SessionLocal() as db:
@@ -61,9 +59,9 @@ def update_task_status(task_id: int, new_status: str):
             task.status = new_status
             db.commit()
 
-def get_task_by_id(user_id: int, task_id: int):
+def get_task_by_id(task_id: int):
     with SessionLocal() as db:
-        task = db.query(Task).filter(Task.user_id == user_id, Task.id == task_id).first()
+        task = db.query(Task).filter(Task.id == task_id).first()
         return task
     
 def delete_task(task_id: int):
@@ -90,16 +88,20 @@ def get_tasks_with_due_reminder(today: datetime.date):
 
     return result
 
-def get_tasks_by_filters(db: Session, user_id: int, category=None, priority=None, start=None, end=None):
-    query = db.query(Task).filter(Task.user_id == user_id)
-
-    if category and category != "все":
-        query = query.filter(Task.category == category)
-
-    if priority and priority != "any":
-        query = query.filter(Task.priority == priority)
-
-    if start and end:
-        query = query.filter(Task.deadline.between(start, end))
-
-    return query.all()
+def get_tasks_by_filters(user_id: int, category: str , priority: str, status: str = None, 
+                         start: datetime = None, end: datetime = None):
+    with SessionLocal() as db:
+        query = db.query(Task).filter(Task.user_id == user_id)
+        
+        if category and category != "все":
+            query = query.filter(Task.category == category)
+        if priority and priority != "any":
+            query = query.filter(Task.priority == priority)
+        if status:
+            query = query.filter(Task.status == status)
+        if start:
+            query = query.filter(Task.deadline >= start)
+        if end:
+            query = query.filter(Task.deadline <= end)
+        
+        return query.order_by(Task.deadline).all()
