@@ -1,4 +1,7 @@
-from handlers.base_imports import *
+from aiogram import Router, F
+from aiogram.types import Message
+from database import crud
+from datetime import datetime
 from datetime import datetime, timedelta
 
 def get_week_day(task):

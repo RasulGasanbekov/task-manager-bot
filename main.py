@@ -1,10 +1,10 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from config import BOT_TOKEN
+from core.config import BOT_TOKEN
 from handlers import router
 from database.models import Base
 from database import engine
-from scheduler import scheduler, check_reminders
+from core.scheduler import scheduler, check_reminders
 
 async def main():
     Base.metadata.create_all(bind=engine)
