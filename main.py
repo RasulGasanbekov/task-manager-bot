@@ -6,6 +6,7 @@ from database.models import Base
 from database import engine
 from core.scheduler import scheduler, check_reminders
 
+
 async def main():
     Base.metadata.create_all(bind=engine)
 
@@ -13,11 +14,12 @@ async def main():
     dp = Dispatcher()
 
     dp.include_router(router)
-    
+
     scheduler.start()
-    scheduler.add_job(check_reminders, 'cron', hour=9, minute=15, args=[bot])
+    scheduler.add_job(check_reminders, "cron", hour=9, minute=15, args=[bot])
 
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
